@@ -1,37 +1,79 @@
 import 'dart:async';
 import 'dart:convert';
-import 'package:web_socket_client/web_socket_client.dart';
+import 'package:perplexity_clone/services/websocket_manager.dart';
+import 'package:shared_preferences/shared_preferences.dart';
 
 class ChatWebService {
-  static final _instance = ChatWebService._internal();
-  WebSocket? _socket;
-
+  static final ChatWebService _instance = ChatWebService._internal();
   factory ChatWebService() => _instance;
 
   ChatWebService._internal();
-  final _searchResultController = StreamController<Map<String, dynamic>>();
-  final _contentController = StreamController<Map<String, dynamic>>();
+
+  final _searchResultStream =
+      StreamController<Map<String, dynamic>>.broadcast();
+  final _contentStream = StreamController<Map<String, dynamic>>.broadcast();
 
   Stream<Map<String, dynamic>> get searchResultStream =>
-      _searchResultController.stream;
-  Stream<Map<String, dynamic>> get contentStream => _contentController.stream;
+      _searchResultStream.stream;
+
+  Stream<Map<String, dynamic>> get contentStream => _contentStream.stream;
 
   void connect() {
-    _socket = WebSocket(Uri.parse("ws://localhost:8000/ws/chat"));
-
-    _socket!.messages.listen((message) {
-      final data = json.decode(message);
-      if (data['type'] == 'search_result') {
-        _searchResultController.add(data);
-      } else if (data['type'] == 'content') {
-        _contentController.add(data);
-      }
-    });
+    WebSocketManager().connect(
+      onMessage: _handleMessage,
+    );
   }
 
-  void chat(String query) {
-    print(query);
-    print(_socket);
-    _socket!.send(json.encode({'query': query}));
+  void _handleMessage(String raw) {
+    try {
+      final data = json.decode(raw);
+
+      if (data['type'] == 'search_results') {
+        _searchResultStream.add(data);
+      } else if (data['type'] == 'content') {
+        _contentStream.add(data);
+      }
+    } catch (e) {
+      print("WS decode error: $e");
+    }
+  }
+
+  /// Chat ke backend dengan:
+  /// - query: teks user
+  /// - llm: nama model (Gemini 2.5 / NoFilterGPT / dll)
+  /// - history: seluruh riwayat pesan (user+assistant)
+  /// - searchMode: true = pakai Tavily, false = no web search
+  Future<void> chat(String query, String llm,
+      List<Map<String, dynamic>> history, bool searchMode) async {
+    final socket = WebSocketManager().socket;
+
+    if (socket == null) {
+      print("❌ WebSocket not connected.");
+      return;
+    }
+
+    // Load saved personality settings
+    final prefs = await SharedPreferences.getInstance();
+    final customInstruction = prefs.getString("custom_instruction") ?? "";
+    final behaviorMode = prefs.getString("behavior_mode") ?? "Default";
+
+    // Build payload for backend
+    final payload = json.encode({
+      'query': query,
+      'llm': llm,
+      'history': history,
+      'search_mode': searchMode,
+      'instruction': customInstruction,
+      'behavior': behaviorMode,
+    });
+
+    socket.send(payload);
+
+    print("➡ SENT QUERY: $payload");
+  }
+
+  void dispose() {
+    _searchResultStream.close();
+    _contentStream.close();
   }
 }

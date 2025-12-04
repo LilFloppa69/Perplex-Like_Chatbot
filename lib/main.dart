@@ -2,8 +2,14 @@ import 'package:flutter/material.dart';
 import 'package:google_fonts/google_fonts.dart';
 import 'package:perplexity_clone/pages/home_page.dart';
 import 'package:perplexity_clone/theme/colors.dart';
+import 'package:perplexity_clone/services/chat_web_service.dart';
 
 void main() {
+  WidgetsFlutterBinding.ensureInitialized();
+
+  /// Connect WebSocket at app start
+  ChatWebService().connect();
+
   runApp(const MyApp());
 }
 
@@ -17,17 +23,11 @@ class MyApp extends StatelessWidget {
       title: 'Perplexity Clone',
       theme: ThemeData(
         scaffoldBackgroundColor: AppColors.background,
-        colorScheme: ColorScheme.fromSeed(seedColor: AppColors.submitButton),
         textTheme: GoogleFonts.interTextTheme(
-          ThemeData.dark().textTheme.copyWith(
-                bodyMedium: const TextStyle(
-                  fontSize: 15,
-                  color: AppColors.whiteColor,
-                ),
-              ),
+          ThemeData.dark().textTheme,
         ),
       ),
-      home: HomePage(),
+      home: const HomePage(),
     );
   }
 }
