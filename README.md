@@ -1,4 +1,5 @@
 # Simple Perplexity Clone
+Special Thanks to: Rivaan Ranawat for the idea. Check on his YT Channel
 
 ## Tech Stack:
 Frontend: Flutter
