@@ -4,7 +4,7 @@ import 'package:shared_preferences/shared_preferences.dart';
 import 'package:perplexity_clone/models/news_article.dart';
 
 class NewsService {
-  static const String apiKey = "ade1fafd8ac2424791e7115383edc803";
+  static const String apiKey = "YOUR_NEWS_API_KEY";
   static const String baseUrl =
       "https://newsapi.org/v2/top-headlines?country=us";
 
