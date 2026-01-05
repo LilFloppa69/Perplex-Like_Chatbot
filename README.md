@@ -1,5 +1,5 @@
 # Simple Perplexity Clone
-Special Thanks to: Rivaan Ranawat for the idea. Check out his YT Channel and Github Page
+Special Thanks to: Rivaan Ranawat for the idea as i made a lot of improvements for this chatbot app. Check out his YT Channel and Github Page
 
 ## Tech Stack:
 Frontend: Flutter
